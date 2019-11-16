@@ -2,12 +2,30 @@ html {
 	font-family: sofia-pro;
 }
 
-.inputs select {
+#calc-container {
+	display: flex;
+	flex-flow: column;
+	justify-content: center;
+	height: 95vh;
+}
+
+div.inputs {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	width: 100%
+}
+
+div.inputs select {
 	padding: 10px 20px;
 	margin: 20px;
 	font-size: 18px;
 	font-weight: 600;
 	font-family: sofia-pro;
+}
+
+div.charts {
+	text-align: center;
 }
 
 svg .arcbg {
@@ -18,6 +36,9 @@ svg .arc {
   fill: #5E7F65;
 }
 
+svg text.calcnum {
+	font-weight: 600;
+}
 /*svg .dolsave {
 /*  font-size: 22px;
 /*}
