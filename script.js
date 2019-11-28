@@ -36,7 +36,8 @@ inputs = d3.select('div.inputs')
             .data(opts)
             .enter()
             .append('select')
-            .attr('id', function(d) {return d.id});
+            .attr('id', function(d) {return d.id})
+            .attr('onchange', 'update()');
 
 //add input options
 inputs.selectAll('option')
@@ -150,10 +151,10 @@ const c8_electric = {upfront:{
 const electric_vehicles = {6:c6_electric,7:c7_electric,8:c8_electric}
 
 function calcVehicle(vehicle,reefer,tow,box) {
-  total_upfront = vehicle.upfront.base
-  if (reefer) total_upfront += vehicle.upfront.reefer
-  if (tow) total_upfront += vehicle.upfront.tow
-  if (box) total_upfront += vehicle.upfront.box
+  let total_upfront = vehicle.upfront.base
+  if (reefer) {total_upfront += vehicle.upfront.reefer}
+  if (tow) {total_upfront += vehicle.upfront.tow}
+  if (box) {total_upfront += vehicle.upfront.box}
   if ('mpg' in vehicle){
     fuel_spend = cost_gas*(lt_miles/vehicle.mpg)
   }
@@ -164,48 +165,139 @@ function calcVehicle(vehicle,reefer,tow,box) {
   comp_spend = lt_miles*vehicle.compCPM
   inc_up_total = -(vehicle.vpd*vehicle.inc_dpy*10)
 
-  lt_spend = total_upfront + fuel_spend + maint_spend + comp_spend + inc_up_total
-  cpm = (fuel_spend + maint_spend + comp_spend)/lt_miles
+  let lt_spend = total_upfront + fuel_spend + maint_spend + comp_spend + inc_up_total
+  let cpm = (fuel_spend + maint_spend + comp_spend)/lt_miles
   return {lt_spend:lt_spend,cpm:cpm}
 }
 
 //pulls out the values of each field and recalculates savings
 function calcSav(){
   vehicle_class = d3.select("#vehicleclass").property("value")
-  reefer = d3.select("#reefer").property("value")
-  tow = d3.select("#tow").property("value")
-  box = d3.select("#box").property("value")
+  reefer = Number(d3.select("#reefer").property("value"))
+  tow = Number(d3.select("#tow").property("value"))
+  box = Number(d3.select("#box").property("value"))
   electric_totals = calcVehicle(electric_vehicles[vehicle_class],reefer,tow,box)
   diesel_totals = calcVehicle(diesel_vehicles[vehicle_class],reefer,tow,box)
   total_sav_d = diesel_totals.lt_spend - electric_totals.lt_spend
   total_sav_p = total_sav_d/diesel_totals.lt_spend
   sav_dpm = diesel_totals.cpm - electric_totals.cpm
   sav_ppm = sav_dpm/diesel_totals.cpm
-  return {
+  savings = {
     total_sav_d:total_sav_d,
     total_sav_p:total_sav_p,
     sav_dpm:sav_dpm,
-    sav_ppm:sav_ppm
-  }
+    sav_ppm:sav_ppm,
+    electric:electric_totals,
+    diesel:diesel_totals
+  };
+  return savings;
 }
 
+var savings = calcSav();
+//***
 ///////////////////
 //Charts Output
 ////////////////
+//***
 
-h = 200
+function update() {
+  calcSav()
+  updateDial()
+  updateChart()
+}
+
+h = 300
 w = 800
+
+bar_height = 150
+
+//explicitly hoist variables
+var xScale, yScale, xAxis, yAxis, bars, bar_data, axes
 
 var svg = d3.select('div.charts')
   .append('svg')
   .attr('height',h)
   .attr('width', w);
 
+drawChart()
+////////////////////
+//Building the bars
+////////////////////
+function drawChart() {
+  bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
+  xScale = d3.scaleLinear()
+      .range([0,w-30])
+      .domain([0,d3.max(bar_data.map(d => Math.round(d.cost + 5000)))])
+
+  yScale = d3.scaleBand()
+      .range([0,bar_height])
+      .padding(.05)
+      .domain(['Electric','Diesel'])
+
+//creating the axis
+  xAxis = d3.axisBottom(xScale)
+      //.tickFormat(d3.format("($.3"))
+  yAxis = d3.axisLeft().tickSize(0).scale(yScale)
+
+  axes = svg.append('g')
+      .attr('class', 'axes')
+
+  axes.append('g')
+      .append('text')
+      .attr('transform', 'translate(' + (w/2) + ' , 140)')
+      .style('text-anchor', 'middle')
+      .text('Total Cost')
+
+  axes.append('g')
+    .attr('class','x_axis')
+    .attr('transform', 'translate(0, '+bar_height+')')
+    .call(xAxis);
+
+  axes.selectAll('.bar')
+      .data(bar_data)
+    .enter().append('rect')
+      .attr('class', 'bar')
+      .attr('y', d => yScale(d.type))
+      .attr('height', yScale.bandwidth())
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyOut)
+      .attr('width', d => xScale(d.cost));
+
+  axes.append('g')
+    .attr('class', 'y_axis')
+    .call(yAxis)
+    .style('color', '#fff')
+    .selectAll('.tick text')
+    .style('text-anchor', 'start')
+    .attr('x', '40');
+
+  axes.attr('transform', 'translate(15,0)');
+}
+
+function updateChart() {
+  bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
+  xScale.domain([0,d3.max(bar_data.map(d => Math.round(d.cost + 5000)))])
+  xAxis.scale(xScale)
+
+  axes.select('.x_axis')
+      .transition()
+      .ease(d3.easePolyOut)
+      .call(xAxis)
+
+  axes.selectAll('rect')
+      .data(bar_data)
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyOut)
+      .attr('width', d => xScale(d.cost))
+}
+
 ////////////////////
 //Building the arcs
 ////////////////////
 
-//change the factor of pic to get that percent of a cirlce
+//change the factor of pi to get that percent of a cirlce
 slice = Math.PI*.8
 start = -slice
 end = slice
@@ -219,7 +311,9 @@ let pc2ang = d3.scaleLinear()
               .range([start, end])
               .domain([0,100]);
 
-var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(0)},{'percent':89.3,'dollars':8000,'endAngle':pc2ang(0)},{'percent':60,'dollars':5000,'endAngle':pc2ang(0)}]
+var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(0)},
+  {'percent':89.3,'dollars':8000,'endAngle':pc2ang(0)}];
+  /*{'percent':60,'dollars':5000,'endAngle':pc2ang(0)}]*/
 
 
 let arcbg = d3.arc()
@@ -251,8 +345,7 @@ var dialgroups = svg.selectAll('g.dial')
     .enter()
     .append('g')
     .attr('class','dial')
-    .attr('transform', function(d,i) {return 'translate('+(180+(i*220))+',100)'})
-
+    .attr('transform', function(d,i) {return 'translate('+(180+(i*220))+',250)'})
 
 dialgroups.append('path')
     .attr("d", arcbg)
@@ -268,6 +361,7 @@ dialgroups.append('path')
 
 function xshift(num,font){return (-(.55*font*(Math.ceil(Math.log10(num))+1))/2)}
 
+//dollar text
 var dolsave = dialgroups.append('text')
     .attr('class', 'dolsave calcnum')
     .text('$0').attr('x', 0).attr('y',40)
@@ -284,6 +378,7 @@ var dolsave = dialgroups.append('text')
       }
     })
 
+//percent text
 var persave = dialgroups.append('text')
     .attr('class', 'persave calcnum')
     .text('0%').attr('x', -10).attr('y',0)
@@ -299,3 +394,58 @@ var persave = dialgroups.append('text')
         this.textContent = interpolator(t)+'%';
       }
     })
+
+function updateDial() {
+  var savings = calcSav()
+  dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(0)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang(0)}]
+  dialgroups = svg.selectAll('g.dial')
+      .data(dials);
+
+  dialgroups.selectAll('.arc')
+      .data(dials)
+      .append('path')
+      .transition()
+      .delay(300)
+      .duration(4000)
+      .attrTween('d', arcTween())
+
+//  arcpaths.enter()
+//    .append('path')
+//    .transition()
+//    .delay(300)
+//    .duration(4000)
+//    .attrTween('d', arcTween());
+
+  dialgroups.selectAll('text.dolsave')
+    .data(dials)
+    .append('text')
+    .attr('font-size', d => dolfont+'px')
+    .transition()
+    .delay(300)
+    .duration(2000)
+    .ease(d3.easePolyOut)
+    .attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
+    .tween('text', function(d) {
+      console.log(this.textContent)
+      console.log(d)
+      var interpolator = d3.interpolateRound(Number(this.textContent.match(/\d+/)), d.dollars);
+      return function(t){
+        this.textContent = '$'+interpolator(t);
+      }
+    });
+  dialgroups.selectAll('text.persave')
+    .attr('font-size', d => perfont+'px')
+    .transition()
+    .delay(300)
+    .duration(2000)
+    .ease(d3.easePolyOut)
+    .attr('x', d => {return xshift(d.percent,perfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
+    .tween('text', function(d) {
+      var interpolator = d3.interpolateRound(Number(this.textContent.match(/\d+/)), d.percent);
+      return function(t){
+        this.textContent = interpolator(t)+'%';
+      }
+    });
+
+  return dials
+}

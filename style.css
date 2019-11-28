@@ -45,4 +45,13 @@ svg text.calcnum {
 /*
 /*svg .persave {
 /*  font-size: 42px;
-/*}
+/*}*/
+
+
+
+.y_axis .tick text{
+	padding: 10px 20px;
+	margin: 20px;
+	font-size: 24px;
+	font-weight: 600;
+}
