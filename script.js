@@ -67,6 +67,11 @@ inputs.selectAll('option')
       .text(function(d) {return d.text});
 
 
+/*d3.select('div.inputs')
+  .selectAll('select').each(function() {this.selectedIndex = -1})*/
+
+
+
 ////////////////////
 //Variables
 /////////////////
@@ -212,7 +217,7 @@ function calcSav(){
   return savings;
 }
 
-var savings = calcSav();
+var savings = {"total_sav_d":0,"total_sav_p":00,"sav_dpm":0,"sav_ppm":0,"electric":{"lt_spend":0,"cpm":0},"diesel":{"lt_spend":0,"cpm":0}};
 //***
 ///////////////////
 //Charts Output
@@ -277,7 +282,7 @@ function drawChart() {
   axes.append('g')
       .append('text')
       .attr('class','xlabel')
-      .attr('transform', 'translate(' + (w/2) + ' , 140)')
+      .attr('transform', 'translate(' + (w/2) + ' , 200)')
       .style('text-anchor', 'middle')
       .text('Total Cost')
 
