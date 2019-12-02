@@ -30,6 +30,25 @@ opts = [{'id':'vehicleclass',
 //UI Setup
 ///////////////
 
+//colors
+green = '#5e7f65'
+orange = '#e18137'
+blue = '#5885a0'
+
+yellow = '#d3a645'
+brown = '#6b3f1e'
+
+gray0 = '#eee7e3'
+gray1 = '#cec8c4'
+gray2 = '#a7a19d'
+gray3 = '#847f7b'
+gray4 = '#686462'
+gray5 = '#302f2e'
+black = '#181818'
+
+teal = '#9dc8bc'
+red = '#df5a35'
+
 //create input boxes
 inputs = d3.select('div.inputs')
             .selectAll('select')
@@ -206,7 +225,7 @@ function update() {
   updateChart()
 }
 
-h = 300
+h = 500
 w = 800
 
 bar_height = 150
@@ -257,6 +276,7 @@ function drawChart() {
 
   axes.append('g')
       .append('text')
+      .attr('class','xlabel')
       .attr('transform', 'translate(' + (w/2) + ' , 140)')
       .style('text-anchor', 'middle')
       .text('Total Cost')
@@ -280,15 +300,20 @@ function drawChart() {
   axes.append('g')
       .attr('class', 'y_axis')
       .call(yAxis)
-      .style('color', '#fff')
+      .style('color', gray0)
       .selectAll('.tick text')
-      .style('text-anchor', 'start')
-      .attr('x', '40');
+      .style('text-anchor', 'end')
+      .attr('class',d => d)
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyInOut)
+      .attr('x', d => xScale(savings[d.toLowerCase()]['lt_spend'])-40)//relies on the savings object, not D3 bound data;
 
+  //draws the center line on the road
   axes.append('line')
       .attr('class', 'line midline')
       .style('stroke-dasharray', (w/20,w/20))
-      .style('stroke', 'yellow')
+      .style('stroke', yellow)
       .style('stroke-width', '4px')
       .attr('x1',0)
       .attr('y1',bar_height/2)
@@ -301,7 +326,6 @@ function drawChart() {
 
 
   axes.attr('transform', 'translate(15,0)');
-  drawLine()
 }
 
 function updateChart() {
@@ -325,6 +349,12 @@ function updateChart() {
       .duration(3000)
       .ease(d3.easePolyOut)
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
+
+  axes.selectAll('.y_axis .tick text')
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyOut)
+      .attr('x', d => xScale(savings[d.toLowerCase()]['lt_spend'])-40);//relies on the savings object, not D3 bound data;
 }
 
 ////////////////////
@@ -379,7 +409,7 @@ var dialgroups = svg.selectAll('g.dial')
     .enter()
     .append('g')
     .attr('class','dial')
-    .attr('transform', function(d,i) {return 'translate('+(180+(i*220))+',250)'})
+    .attr('transform', function(d,i) {return 'translate('+(180+(i*400))+',300)'})
 
 dialgroups.append('path')
     .attr("d", arcbg)
