@@ -223,6 +223,19 @@ drawChart()
 ////////////////////
 //Building the bars
 ////////////////////
+function drawLine() {
+  /*base = axes.append('rect')
+          .attr('width',w)
+          .attr('height', (yScale.range()[1]-(yScale.paddingOuter()*yScale.step()*2)))
+          .attr('y',yScale.padding()*yScale.step())
+          .attr('fill', 'black')*/
+/*  base = axes.append('rect')
+          .attr('width',w/15)
+          .attr('height', (yScale.range()[1]-(yScale.paddingOuter()*yScale.step()*2)))
+          .attr('y',yScale.padding()*yScale.step())
+          .attr('fill', 'yellow')*/
+}
+
 function drawChart() {
   bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
   xScale = d3.scaleLinear()
@@ -231,7 +244,7 @@ function drawChart() {
 
   yScale = d3.scaleBand()
       .range([0,bar_height])
-      .padding(.05)
+      //.padding(.05)
       .domain(['Electric','Diesel'])
 
 //creating the axis
@@ -265,14 +278,30 @@ function drawChart() {
       .attr('width', d => xScale(d.cost));
 
   axes.append('g')
-    .attr('class', 'y_axis')
-    .call(yAxis)
-    .style('color', '#fff')
-    .selectAll('.tick text')
-    .style('text-anchor', 'start')
-    .attr('x', '40');
+      .attr('class', 'y_axis')
+      .call(yAxis)
+      .style('color', '#fff')
+      .selectAll('.tick text')
+      .style('text-anchor', 'start')
+      .attr('x', '40');
+
+  axes.append('line')
+      .attr('class', 'line midline')
+      .style('stroke-dasharray', (w/20,w/20))
+      .style('stroke', 'yellow')
+      .style('stroke-width', '4px')
+      .attr('x1',0)
+      .attr('y1',bar_height/2)
+      .attr('x2',0)
+      .attr('y2',bar_height/2)
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyOut)
+      .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
+
 
   axes.attr('transform', 'translate(15,0)');
+  drawLine()
 }
 
 function updateChart() {
@@ -291,6 +320,11 @@ function updateChart() {
       .duration(3000)
       .ease(d3.easePolyOut)
       .attr('width', d => xScale(d.cost))
+  axes.selectAll('line.midline')
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyOut)
+      .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 }
 
 ////////////////////
