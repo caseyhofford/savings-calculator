@@ -358,7 +358,7 @@ function updateChart() {
   axes.selectAll('.y_axis .tick text')
       .transition()
       .duration(3000)
-      .ease(d3.easePolyOut)
+      .ease(d3.easePolyInOut)
       .attr('x', d => xScale(savings[d.toLowerCase()]['lt_spend'])-40);//relies on the savings object, not D3 bound data;
 }
 
