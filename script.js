@@ -236,7 +236,14 @@ w = 800
 bar_height = 150
 
 //explicitly hoist variables
-var xScale, yScale, xAxis, yAxis, bars, bar_data, axes
+var xScale, yScale, xAxis, yAxis, bars, bar_data, axes, motor, battery
+
+//import the icon svgs`
+// battery_svg = d3.xml('./battery.svg', function(error, documentFragment) {
+//   if error {console.log(error);return};
+//   var svgNode = documentFragment.getElementsByTagName('svg')[0];
+//   return svgNode;
+// })
 
 var svg = d3.select('div.charts')
   .append('svg')
@@ -302,17 +309,47 @@ function drawChart() {
       .ease(d3.easePolyOut)
       .attr('width', d => xScale(d.cost));
 
-  axes.append('g')
+  ticks = axes.append('g')
       .attr('class', 'y_axis')
       .call(yAxis)
       .style('color', gray0)
-      .selectAll('.tick text')
+      .selectAll('.tick')
+
+  ticks.attr('class',d => d+' tick')
+      .select('text')
+      .attr('class',d => d+ ' label')
       .style('text-anchor', 'end')
-      .attr('class',d => d)
       .transition()
       .duration(3000)
       .ease(d3.easePolyInOut)
       .attr('x', d => xScale(savings[d.toLowerCase()]['lt_spend'])-40)//relies on the savings object, not D3 bound data;
+
+  motor = axes.select('.tick.Diesel')
+      .append('g')
+      .attr('transform','translate(-160,-28)')
+      .append('svg')
+      //.attr('transform', 'translate(-80,-45)')
+      .attr('class', 'label')
+      .append('g')
+      .attr('transform', 'scale(.6)')
+      .html(d3.select('#motor')
+        .html());
+
+  motor.select('text')
+      .attr('class',d => d+ ' label')
+      .style('text-anchor', 'end')
+
+  battery = axes.select('.tick.Electric')
+      .append('g')
+      .attr('transform','translate(-180,-28)')
+      .append('svg')
+      //.attr('transform', 'translate(-80,-45)')
+      .attr('class', 'label')
+      .append('g')
+      .attr('transform', 'scale(.6)')
+      .html(d3.select('#battery')
+        .html());
+
 
   //draws the center line on the road
   axes.append('line')
@@ -355,7 +392,7 @@ function updateChart() {
       .ease(d3.easePolyOut)
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 
-  axes.selectAll('.y_axis .tick text')
+  axes.selectAll('.y_axis .tick .label')
       .transition()
       .duration(3000)
       .ease(d3.easePolyInOut)
