@@ -421,9 +421,11 @@ var arc = d3.arc()
           .outerRadius(100)
           .startAngle(start);
 
-function arcTween(){
+function arcTween(start){
   return function(d){
-    var interpolate = d3.interpolate(d.endAngle, pc2ang(d.percent));
+    var interpolate = d3.interpolate(pc2ang(0), pc2ang(d.percent));
+    console.log(d)
+    console.log('arcTween')
     return function(t) {
       d.endAngle = interpolate(t);
       return arc(d);
@@ -491,14 +493,20 @@ function updateDial() {
   dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(0)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang(0)}]
   dialgroups = svg.selectAll('g.dial')
       .data(dials);
+  dialgroups.exit().remove()
+  dialgroups.enter()
+      .append();
 
   dialgroups.selectAll('.arc')
-      .data(dials)
-      .append('path')
+      .data(function (){
+        oldAngle = this.__data__['endAngle']
+        dials['oldAngle'] = oldAngle
+        return dials
+      })
       .transition()
       .delay(300)
       .duration(4000)
-      .attrTween('d', arcTween())
+      .attrTween('d', arcTween());
 
   dialgroups.selectAll('text.dolsave')
     .data(dials)
@@ -510,8 +518,6 @@ function updateDial() {
     .ease(d3.easePolyOut)
     .attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
     .tween('text', function(d) {
-      console.log(this.textContent)
-      console.log(d)
       var interpolator = d3.interpolateRound(Number(this.textContent.match(/\d+/)), d.dollars);
       return function(t){
         this.textContent = '$'+interpolator(t);
