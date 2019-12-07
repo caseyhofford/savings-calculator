@@ -224,26 +224,21 @@ var savings = {"total_sav_d":0,"total_sav_p":00,"sav_dpm":0,"sav_ppm":0,"electri
 ////////////////
 //***
 
-function update() {
-  calcSav()
-  updateDial()
-  updateChart()
-}
+container = document.getElementById('calc-container')
 
-h = 500
-w = 800
+h = container.clientHeight - 100
+w = container.clientWidth - 50
 
 bar_height = 150
 
 //explicitly hoist variables
 var xScale, yScale, xAxis, yAxis, bars, bar_data, axes, motor, battery
 
-//import the icon svgs`
-// battery_svg = d3.xml('./battery.svg', function(error, documentFragment) {
-//   if error {console.log(error);return};
-//   var svgNode = documentFragment.getElementsByTagName('svg')[0];
-//   return svgNode;
-// })
+function update() {
+  calcSav()
+  updateDial()
+  updateChart()
+}
 
 var svg = d3.select('div.charts')
   .append('svg')
@@ -254,18 +249,6 @@ drawChart()
 ////////////////////
 //Building the bars
 ////////////////////
-function drawLine() {
-  /*base = axes.append('rect')
-          .attr('width',w)
-          .attr('height', (yScale.range()[1]-(yScale.paddingOuter()*yScale.step()*2)))
-          .attr('y',yScale.padding()*yScale.step())
-          .attr('fill', 'black')*/
-/*  base = axes.append('rect')
-          .attr('width',w/15)
-          .attr('height', (yScale.range()[1]-(yScale.paddingOuter()*yScale.step()*2)))
-          .attr('y',yScale.padding()*yScale.step())
-          .attr('fill', 'yellow')*/
-}
 
 function drawChart() {
   bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
@@ -280,7 +263,8 @@ function drawChart() {
 
 //creating the axis
   xAxis = d3.axisBottom(xScale)
-      //.tickFormat(d3.format("($.3"))
+            .ticks(Math.round(w/80))
+            .tickFormat(d => (d/1000+'k'))
   yAxis = d3.axisLeft().tickSize(0).scale(yScale)
 
   axes = svg.append('g')
@@ -328,7 +312,6 @@ function drawChart() {
       .append('g')
       .attr('transform','translate(-160,-28)')
       .append('svg')
-      //.attr('transform', 'translate(-80,-45)')
       .attr('class', 'label')
       .append('g')
       .attr('transform', 'scale(.6)')
@@ -343,12 +326,18 @@ function drawChart() {
       .append('g')
       .attr('transform','translate(-180,-28)')
       .append('svg')
-      //.attr('transform', 'translate(-80,-45)')
       .attr('class', 'label')
       .append('g')
       .attr('transform', 'scale(.6)')
       .html(d3.select('#battery')
         .html());
+  axes.selectAll('.y_axis .tick .label')
+      .style('stroke', gray1)
+      .style('color', gray1)
+      .style('fill', gray1)
+
+  axes.selectAll('.y_axis .tick text.label')
+      .style('stroke', 'none')
 
 
   //draws the center line on the road
@@ -373,7 +362,6 @@ function drawChart() {
 function updateChart() {
   bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
   xScale.domain([0,d3.max(bar_data.map(d => Math.round(d.cost + 5000)))])
-  xAxis.scale(xScale)
 
   axes.select('.x_axis')
       .transition()
@@ -432,9 +420,6 @@ var arc = d3.arc()
           .innerRadius(80)
           .outerRadius(100)
           .startAngle(start);
-
-//var tot = svg.append('g')
-//  .attr("transform", "translate(200,100)")
 
 function arcTween(){
   return function(d){
@@ -514,13 +499,6 @@ function updateDial() {
       .delay(300)
       .duration(4000)
       .attrTween('d', arcTween())
-
-//  arcpaths.enter()
-//    .append('path')
-//    .transition()
-//    .delay(300)
-//    .duration(4000)
-//    .attrTween('d', arcTween());
 
   dialgroups.selectAll('text.dolsave')
     .data(dials)
