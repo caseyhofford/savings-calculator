@@ -275,7 +275,7 @@ function drawChart() {
       .attr('class','xlabel')
       .attr('transform', 'translate(' + (w/2) + ' , 200)')
       .style('text-anchor', 'middle')
-      .text('Total Cost')
+      .text('Lifetime Cost Per Vehicle')
 
   axes.append('g')
     .attr('class','x_axis')
@@ -285,7 +285,7 @@ function drawChart() {
   axes.selectAll('.bar')
       .data(bar_data)
     .enter().append('rect')
-      .attr('class', 'bar')
+      .attr('class', d => 'bar '+d.type)
       .attr('y', d => yScale(d.type))
       .attr('height', yScale.bandwidth())
       .transition()
@@ -334,10 +334,10 @@ function drawChart() {
   axes.selectAll('.y_axis .tick .label')
       .style('stroke', gray1)
       .style('color', gray1)
-      .style('fill', gray1)
+      .style('fill', gray1);
 
   axes.selectAll('.y_axis .tick text.label')
-      .style('stroke', 'none')
+      .style('stroke', 'none');
 
 
   //draws the center line on the road
@@ -405,8 +405,8 @@ let pc2ang = d3.scaleLinear()
               .range([start, end])
               .domain([0,100]);
 
-var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(0)},
-  {'percent':89.3,'dollars':8000,'endAngle':pc2ang(0)}];
+var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(23),'oldAngle':pc2ang(0)},
+  {'percent':89.3,'dollars':8000,'endAngle':pc2ang(89.3),'oldAngle':pc2ang(0)}];
   /*{'percent':60,'dollars':5000,'endAngle':pc2ang(0)}]*/
 
 
@@ -420,18 +420,6 @@ var arc = d3.arc()
           .innerRadius(80)
           .outerRadius(100)
           .startAngle(start);
-
-function arcTween(start){
-  return function(d){
-    var interpolate = d3.interpolate(pc2ang(0), pc2ang(d.percent));
-    console.log(d)
-    console.log('arcTween')
-    return function(t) {
-      d.endAngle = interpolate(t);
-      return arc(d);
-    }
-  }
-}
 
 var dialgroups = svg.selectAll('g.dial')
     .data(dials)
@@ -447,10 +435,11 @@ dialgroups.append('path')
 dialgroups.append('path')
     .attr('class', 'arc')
     .attr('d', arc)
+    .property('_current',d=>d.endAngle)
     .transition()
-    .delay(300)
-    .duration(4000)
-    .attrTween('d', arcTween())
+    // .delay(300)
+    // .duration(4000)
+    // .attrTween('d', arcTween)
 
 function xshift(num,font){return (-(.55*font*(Math.ceil(Math.log10(num))+1))/2)}
 
@@ -459,6 +448,7 @@ var dolsave = dialgroups.append('text')
     .attr('class', 'dolsave calcnum')
     .text('$0').attr('x', 0).attr('y',40)
     .attr('font-size', d => dolfont+'px')
+    .property('_current', d => d.dollars)
     .transition()
     .delay(300)
     .duration(2000)
@@ -469,13 +459,14 @@ var dolsave = dialgroups.append('text')
       return function(t){
         this.textContent = '$'+interpolator(t);
       }
-    })
+    });
 
 //percent text
 var persave = dialgroups.append('text')
     .attr('class', 'persave calcnum')
     .text('0%').attr('x', -10).attr('y',0)
     .attr('font-size', d => perfont+'px')
+    .property('_current', d => d.percent)
     .transition()
     .delay(300)
     .duration(2000)
@@ -488,54 +479,89 @@ var persave = dialgroups.append('text')
       }
     })
 
+function arcTween(d, i, attr){
+  console.log(this)
+  var interpolate = d3.interpolate(this._current, d.endAngle);
+  return function(t) {
+    d.endAngle = interpolate(t);
+    this._current = d.endAngle;
+    return arc(d);
+  }
+};
+
 function updateDial() {
   var savings = calcSav()
-  dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(0)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang(0)}]
+  dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(savings.total_sav_p*100)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang((savings.sav_ppm*100))}]
+  angles = dials.map(value => pc2ang(value.percent))
   dialgroups = svg.selectAll('g.dial')
       .data(dials);
-  dialgroups.exit().remove()
-  dialgroups.enter()
-      .append();
+  var dialgroupsEnter = dialgroups.enter().append('g');
+  dialgroupsEnter.append('path')
+  dialgroupsEnter.append('text')
+  dialgroupsEnter.append('path.arc')
+  // dialgroups.exit().remove()
+  // dialgroups.enter()
+  //     .append();
 
-  dialgroups.selectAll('.arc')
-      .data(function (){
-        oldAngle = this.__data__['endAngle']
-        dials['oldAngle'] = oldAngle
-        return dials
-      })
+  // var arcgroups = svg.selectAll('path.arc')
+  //     .data(angles)
+
+  dialgroups.select('path.arc')
       .transition()
       .delay(300)
       .duration(4000)
-      .attrTween('d', arcTween());
+      .attrTween('d', arcTween);
 
-  dialgroups.selectAll('text.dolsave')
-    .data(dials)
-    .append('text')
-    .attr('font-size', d => dolfont+'px')
+  // arcgroups = arcgroups.enter()
+  //     .append("svg:path")
+  //     .attr("class","arc")
+  //     .attr("d",d=>console.log(d))
+
+  //dols.exit().remove()
+
+  dialgroups.select('text.dolsave')
     .transition()
     .delay(300)
     .duration(2000)
     .ease(d3.easePolyOut)
-    .attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
+    //.attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
     .tween('text', function(d) {
-      var interpolator = d3.interpolateRound(Number(this.textContent.match(/\d+/)), d.dollars);
+      var interpolator = d3.interpolateRound(this._current*100, d.dollars*100);
       return function(t){
-        this.textContent = '$'+interpolator(t);
+        value = interpolator(t)/100;
+        formats = formatPrice(value);
+        this.textContent = formats.value;
+        this._current = value;
+        this.attr('x', formats.x);
+        console.log(this)
       }
     });
-  dialgroups.selectAll('text.persave')
-    .attr('font-size', d => perfont+'px')
+  dialgroups.select('text.persave')
     .transition()
-    .delay(300)
-    .duration(2000)
-    .ease(d3.easePolyOut)
-    .attr('x', d => {return xshift(d.percent,perfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
-    .tween('text', function(d) {
-      var interpolator = d3.interpolateRound(Number(this.textContent.match(/\d+/)), d.percent);
-      return function(t){
-        this.textContent = interpolator(t)+'%';
-      }
-    });
+      .delay(300)
+      .duration(2000)
+      .ease(d3.easePolyOut)
+      .attr('x', d => {return xshift(d.percent,perfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
+      .textTween(function(d) {
+        var interpolator = d3.interpolateRound(this._current, d.percent);
+        return function(t){
+          return formatPercent(this._current = interpolator(t));
+        }
+      });
 
   return dials
+}
+
+const formatPercent = v => v+'%'
+
+const formatPrice = function(value) {
+  mag = Math.ceil(Math.log10(value));
+  if (mag > 0){
+    thous = value.toString().slice(0,(mag-3))
+    return {value:thous+'K', x:(-(.55*dolfont*(mag-3))/2)}
+  }
+  else {
+    cents = value.toString().slice(0,4)
+    return {value:'$'+cents,x:-30.250000000000004}
+  }
 }
