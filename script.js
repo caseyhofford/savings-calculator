@@ -356,7 +356,7 @@ function drawChart() {
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 
 
-  axes.attr('transform', 'translate(15,0)');
+  axes.attr('transform', 'translate(15,250)');//set bar chart placement
 }
 
 function updateChart() {
@@ -405,9 +405,9 @@ let pc2ang = d3.scaleLinear()
               .range([start, end])
               .domain([0,100]);
 
-var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(23),'oldAngle':pc2ang(0)},
-  {'percent':89.3,'dollars':8000,'endAngle':pc2ang(89.3),'oldAngle':pc2ang(0)}];
-  /*{'percent':60,'dollars':5000,'endAngle':pc2ang(0)}]*/
+// var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(23),'oldAngle':pc2ang(0)},
+//  {'percent':89.3,'dollars':8000,'endAngle':pc2ang(89.3),'oldAngle':pc2ang(0)}];
+var dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(savings.total_sav_p*100)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang((savings.sav_ppm*100))}]
 
 
 let arcbg = d3.arc()
@@ -426,7 +426,7 @@ var dialgroups = svg.selectAll('g.dial')
     .enter()
     .append('g')
     .attr('class','dial')
-    .attr('transform', function(d,i) {return 'translate('+(180+(i*400))+',300)'})
+    .attr('transform', function(d,i) {return 'translate('+(w/3)*(i+1)+',150)'})//set dial placement
 
 dialgroups.append('path')
     .attr("d", arcbg)
@@ -437,9 +437,6 @@ dialgroups.append('path')
     .attr('d', arc)
     .property('_current',d=>d.endAngle)
     .transition()
-    // .delay(300)
-    // .duration(4000)
-    // .attrTween('d', arcTween)
 
 function xshift(num,font){return (-(.55*font*(Math.ceil(Math.log10(num))+1))/2)}
 
@@ -453,7 +450,7 @@ var dolsave = dialgroups.append('text')
     .delay(300)
     .duration(2000)
     .ease(d3.easePolyOut)
-    .attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
+    .attr('x', d => {return xshift(1000,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
     .tween('text', function(d) {
       var interpolator = d3.interpolateRound(initial, d.dollars);
       return function(t){
@@ -471,7 +468,7 @@ var persave = dialgroups.append('text')
     .delay(300)
     .duration(2000)
     .ease(d3.easePolyOut)
-    .attr('x', d => {return xshift(d.percent,perfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
+    .attr('x', d => {return xshift(50,perfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
     .tween('text', function(d) {
       var interpolator = d3.interpolateRound(initial, d.percent);
       return function(t){
@@ -480,44 +477,33 @@ var persave = dialgroups.append('text')
     })
 
 function arcTween(d, i, attr){
-  console.log(this)
   var interpolate = d3.interpolate(this._current, d.endAngle);
   return function(t) {
     d.endAngle = interpolate(t);
-    this._current = d.endAngle;
+    this._current = d.endAngle;//ensures most current value always available
     return arc(d);
   }
 };
 
+//this function runs when the inputs change, updates arcs and values for the dials
 function updateDial() {
   var savings = calcSav()
   dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(savings.total_sav_p*100)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang((savings.sav_ppm*100))}]
-  angles = dials.map(value => pc2ang(value.percent))
+  //angles = dials.map(value => pc2ang(value.percent))
   dialgroups = svg.selectAll('g.dial')
-      .data(dials);
+      .data(dials);//update the data
+  //append data to groups
   var dialgroupsEnter = dialgroups.enter().append('g');
   dialgroupsEnter.append('path')
   dialgroupsEnter.append('text')
   dialgroupsEnter.append('path.arc')
-  // dialgroups.exit().remove()
-  // dialgroups.enter()
-  //     .append();
 
-  // var arcgroups = svg.selectAll('path.arc')
-  //     .data(angles)
-
+  //use select on array of dial groups to start transition
   dialgroups.select('path.arc')
       .transition()
       .delay(300)
       .duration(4000)
       .attrTween('d', arcTween);
-
-  // arcgroups = arcgroups.enter()
-  //     .append("svg:path")
-  //     .attr("class","arc")
-  //     .attr("d",d=>console.log(d))
-
-  //dols.exit().remove()
 
   dialgroups.select('text.dolsave')
     .transition()
@@ -532,8 +518,6 @@ function updateDial() {
         formats = formatPrice(value);
         this.textContent = formats.value;
         this._current = value;
-        this.attr('x', formats.x);
-        console.log(this)
       }
     });
   dialgroups.select('text.persave')
@@ -541,7 +525,6 @@ function updateDial() {
       .delay(300)
       .duration(2000)
       .ease(d3.easePolyOut)
-      .attr('x', d => {return xshift(d.percent,perfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
       .textTween(function(d) {
         var interpolator = d3.interpolateRound(this._current, d.percent);
         return function(t){
@@ -554,6 +537,8 @@ function updateDial() {
 
 const formatPercent = v => v+'%'
 
+//formats price, either $0.dd or dddK depending on the value
+//also returns the appropriate x-shift for that size value
 const formatPrice = function(value) {
   mag = Math.ceil(Math.log10(value));
   if (mag > 0){
