@@ -269,6 +269,15 @@ function drawChart() {
             .tickFormat(d => (d/1000+'k'))
   yAxis = d3.axisLeft().tickSize(0).scale(yScale)
 
+  //video html
+  video = '<video autoplay="" playsinline autoplay muted style="position: fixed; left: 0px;" width="500" height="300"><source type="video/webm" src="xos_animation.webm"></video>'
+
+  svg.append('foreignObject')
+      .attr('x',w/2-250)
+      .attr('width', '500px')
+      .attr('height','300px')
+        .html(video)
+
   axes = svg.append('g')
       .attr('class', 'axes')
 
@@ -358,7 +367,7 @@ function drawChart() {
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 
 
-  axes.attr('transform', 'translate(15,250)');//set bar chart placement
+  axes.attr('transform', 'translate(15,300)');//set bar chart placement
 }
 
 function updateChart() {
@@ -413,14 +422,14 @@ var dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endA
 
 
 let arcbg = d3.arc()
-          .innerRadius(80)
-          .outerRadius(100)
+          .innerRadius(75)
+          .outerRadius(110)
           .startAngle(start)
           .endAngle(end);
 
 var arc = d3.arc()
-          .innerRadius(80)
-          .outerRadius(100)
+          .innerRadius(75)
+          .outerRadius(110)
           .startAngle(start);
 
 var dialgroups = svg.selectAll('g.dial')
