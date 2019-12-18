@@ -138,7 +138,7 @@ const c6_electric = {upfront: {
     box : 10000
   },
   kwhm: 1,
-  maintCPM:((1-ev_savings)*c6_diesel.maintCPM),
+  maintCPM: ((1-ev_savings)*c6_diesel.maintCPM),
   compCPM: 0,
   vpd: 150,
   inc_dpy: 6
@@ -146,9 +146,9 @@ const c6_electric = {upfront: {
 
 //class 7
 const c7_electric = {upfront:{
-    base : 100000,
-    reefer : 35000,
-    tow : 50000,
+    base : 120000,
+    reefer : 45000,
+    tow : 60000,
     box : 10000
   },
   kwhm: 1.5,
@@ -160,10 +160,10 @@ const c7_electric = {upfront:{
 
 //class 8
 const c8_electric = {upfront:{
-    base:140000,
-    reefer : null,
-    tow : null,
-    box : null
+    base:195000,
+    reefer : 0,
+    tow : 0,
+    box : 0
   },
   kwhm: 2,
   maintCPM: ((1-ev_savings)*c8_diesel.maintCPM),
@@ -176,9 +176,11 @@ const electric_vehicles = {6:c6_electric,7:c7_electric,8:c8_electric}
 
 function calcVehicle(vehicle,reefer,tow,box) {
   let total_upfront = vehicle.upfront.base
+  console.log(total_upfront)
   if (reefer) {total_upfront += vehicle.upfront.reefer}
   if (tow) {total_upfront += vehicle.upfront.tow}
   if (box) {total_upfront += vehicle.upfront.box}
+  console.log(total_upfront)
   if ('mpg' in vehicle){
     fuel_spend = cost_gas*(lt_miles/vehicle.mpg)
   }
@@ -189,8 +191,8 @@ function calcVehicle(vehicle,reefer,tow,box) {
   comp_spend = lt_miles*vehicle.compCPM
   inc_up_total = -(vehicle.vpd*vehicle.inc_dpy*10)
 
-  let lt_spend = total_upfront + fuel_spend + maint_spend + comp_spend + inc_up_total
-  let cpm = (fuel_spend + maint_spend + comp_spend)/lt_miles
+  var lt_spend = total_upfront + fuel_spend + maint_spend + comp_spend + inc_up_total
+  var cpm = (fuel_spend + maint_spend + comp_spend)/lt_miles
   return {lt_spend:lt_spend,cpm:cpm}
 }
 
