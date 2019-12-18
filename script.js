@@ -383,17 +383,20 @@ function updateChart() {
       .data(bar_data)
       .transition()
       .duration(3000)
+      .delay(5000)
       .ease(d3.easePolyOut)
       .attr('width', d => xScale(d.cost))
   axes.selectAll('line.midline')
       .transition()
       .duration(3000)
+      .delay(5000)
       .ease(d3.easePolyOut)
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 
   axes.selectAll('.y_axis .tick .label')
       .transition()
       .duration(3000)
+      .delay(5000)
       .ease(d3.easePolyInOut)
       .attr('x', d => xScale(savings[d.toLowerCase()]['lt_spend'])-40);//relies on the savings object, not D3 bound data;
 }
@@ -512,13 +515,13 @@ function updateDial() {
   //use select on array of dial groups to start transition
   dialgroups.select('path.arc')
       .transition()
-      .delay(300)
+      .delay(function(d,i){return(3000*i)})
       .duration(4000)
       .attrTween('d', arcTween);
 
   dialgroups.select('text.dolsave')
     .transition()
-    .delay(300)
+    .delay(function(d,i){return(3000*i)})
     .duration(2000)
     .ease(d3.easePolyOut)
     //.attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
@@ -533,7 +536,7 @@ function updateDial() {
     });
   dialgroups.select('text.persave')
     .transition()
-      .delay(300)
+      .delay(function(d,i){return(3000*i)})
       .duration(2000)
       .ease(d3.easePolyOut)
       .textTween(function(d) {
