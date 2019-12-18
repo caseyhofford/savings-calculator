@@ -176,11 +176,9 @@ const electric_vehicles = {6:c6_electric,7:c7_electric,8:c8_electric}
 
 function calcVehicle(vehicle,reefer,tow,box) {
   let total_upfront = vehicle.upfront.base
-  console.log(total_upfront)
   if (reefer) {total_upfront += vehicle.upfront.reefer}
   if (tow) {total_upfront += vehicle.upfront.tow}
   if (box) {total_upfront += vehicle.upfront.box}
-  console.log(total_upfront)
   if ('mpg' in vehicle){
     fuel_spend = cost_gas*(lt_miles/vehicle.mpg)
   }
@@ -247,6 +245,16 @@ var svg = d3.select('div.charts')
   .attr('height',h)
   .attr('width', w);
 
+//video html
+video = '<video autoplay="" playsinline autoplay muted style="position: fixed; left: 0px;" width="500" height="300"><source type="video/webm" src="xos_animation.webm"></video>'
+
+svg.append('foreignObject')
+    .attr('x',w/2-250)
+    .attr('width', '500px')
+    .attr('height','300px')
+      .html(video)
+
+
 drawChart()
 ////////////////////
 //Building the bars
@@ -268,15 +276,6 @@ function drawChart() {
             .ticks(Math.round(w/80))
             .tickFormat(d => (d/1000+'k'))
   yAxis = d3.axisLeft().tickSize(0).scale(yScale)
-
-  //video html
-  video = '<video autoplay="" playsinline autoplay muted style="position: fixed; left: 0px;" width="500" height="300"><source type="video/webm" src="xos_animation.webm"></video>'
-
-  svg.append('foreignObject')
-      .attr('x',w/2-250)
-      .attr('width', '500px')
-      .attr('height','300px')
-        .html(video)
 
   axes = svg.append('g')
       .attr('class', 'axes')
@@ -421,7 +420,7 @@ let pc2ang = d3.scaleLinear()
 
 // var dials = [{'percent':23,'dollars':1200,'endAngle':pc2ang(23),'oldAngle':pc2ang(0)},
 //  {'percent':89.3,'dollars':8000,'endAngle':pc2ang(89.3),'oldAngle':pc2ang(0)}];
-var dials = [{percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(savings.total_sav_p*100)},{percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang((savings.sav_ppm*100))}]
+var dials = [{label:'Lifetime\nSavings',percent:(savings.total_sav_p*100),dollars:savings.total_sav_d,endAngle:pc2ang(savings.total_sav_p*100)},{label:'Savings\nPer Mile',percent:(savings.sav_ppm*100),dollars:savings.sav_dpm,endAngle:pc2ang((savings.sav_ppm*100))}]
 
 
 let arcbg = d3.arc()
@@ -451,6 +450,12 @@ dialgroups.append('path')
     .attr('d', arc)
     .property('_current',d=>d.endAngle)
     .transition()
+
+ dialgroups.append('text')
+     .text(d => d.label)
+     .attr('x','-90')
+     .attr('y','120')
+     .attr('font-size', '24px')
 
 function xshift(num,font){return (-(.55*font*(Math.ceil(Math.log10(num))+1))/2)}
 
@@ -521,7 +526,7 @@ function updateDial() {
 
   dialgroups.select('text.dolsave')
     .transition()
-    .delay(function(d,i){return(3000*i)})
+    .delay(function(d,i){return(2000*i)})
     .duration(2000)
     .ease(d3.easePolyOut)
     //.attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
@@ -536,7 +541,7 @@ function updateDial() {
     });
   dialgroups.select('text.persave')
     .transition()
-      .delay(function(d,i){return(3000*i)})
+      .delay(function(d,i){return(2000*i)})
       .duration(2000)
       .ease(d3.easePolyOut)
       .textTween(function(d) {

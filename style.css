@@ -64,3 +64,8 @@ svg text.calcnum {
 	font-size: 24px;
 	font-weight: 600;
 }
+
+#calc-container {
+	z-index: 999;
+	position: relative;
+}
