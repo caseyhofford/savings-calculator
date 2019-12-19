@@ -231,6 +231,10 @@ w = container.clientWidth - 50
 
 bar_height = 150
 
+//adding in the logo animation
+d3.select('video.logo')
+  .style('left',((container.clientWidth+16)/2)-250+'px')
+
 //explicitly hoist variables
 var xScale, yScale, xAxis, yAxis, bars, bar_data, axes, motor, battery
 
@@ -245,14 +249,14 @@ var svg = d3.select('div.charts')
   .attr('height',h)
   .attr('width', w);
 
-//video html
-video = '<video autoplay="" playsinline autoplay muted style="position: fixed; left: 0px;" width="500" height="300"><source type="video/webm" src="xos_animation.webm"></video>'
-
-svg.append('foreignObject')
-    .attr('x',w/2-250)
-    .attr('width', '500px')
-    .attr('height','300px')
-      .html(video)
+// //video html
+// video = '<video autoplay="" playsinline autoplay muted style="position: fixed; left: 0px;" width="500" height="300"><source type="video/webm" src="xos_animation.webm"></video>'
+//
+// svg.append('foreignObject')
+//     .attr('x',w/2-250)
+//     .attr('width', '500px')
+//     .attr('height','300px')
+//       .html(video)
 
 
 drawChart()
@@ -286,6 +290,7 @@ function drawChart() {
       .attr('transform', 'translate(' + (w/2) + ' , 200)')
       .style('text-anchor', 'middle')
       .text('Lifetime Cost Per Vehicle')
+      .attr('font-size', '24px')
 
   axes.append('g')
     .attr('class','x_axis')
@@ -382,20 +387,20 @@ function updateChart() {
       .data(bar_data)
       .transition()
       .duration(3000)
-      .delay(5000)
+      .delay(3000)
       .ease(d3.easePolyOut)
       .attr('width', d => xScale(d.cost))
   axes.selectAll('line.midline')
       .transition()
       .duration(3000)
-      .delay(5000)
+      .delay(3000)
       .ease(d3.easePolyOut)
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 
   axes.selectAll('.y_axis .tick .label')
       .transition()
       .duration(3000)
-      .delay(5000)
+      .delay(3200)
       .ease(d3.easePolyInOut)
       .attr('x', d => xScale(savings[d.toLowerCase()]['lt_spend'])-40);//relies on the savings object, not D3 bound data;
 }
@@ -520,13 +525,13 @@ function updateDial() {
   //use select on array of dial groups to start transition
   dialgroups.select('path.arc')
       .transition()
-      .delay(function(d,i){return(3000*i)})
-      .duration(4000)
+      .delay(function(d,i){return(2000*i)})
+      .duration(2000)
       .attrTween('d', arcTween);
 
   dialgroups.select('text.dolsave')
     .transition()
-    .delay(function(d,i){return(2000*i)})
+    .delay(function(d,i){return(1500*i)})
     .duration(2000)
     .ease(d3.easePolyOut)
     //.attr('x', d => {return xshift(d.dollars,dolfont)})//apprx half the width of the value string plus symbol for sofia-pro, adjust for other fonts
@@ -541,7 +546,7 @@ function updateDial() {
     });
   dialgroups.select('text.persave')
     .transition()
-      .delay(function(d,i){return(2000*i)})
+      .delay(function(d,i){return(1500*i)})
       .duration(2000)
       .ease(d3.easePolyOut)
       .textTween(function(d) {

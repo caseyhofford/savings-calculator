@@ -69,3 +69,9 @@ svg text.calcnum {
 	z-index: 999;
 	position: relative;
 }
+
+video.logo {
+	position: fixed;
+	z-index: 0;
+	top: 50px;
+}
