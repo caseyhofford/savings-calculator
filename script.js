@@ -4,22 +4,26 @@
 
 //Menu Description
 opts = [{'id':'vehicleclass',
+        'label':'Vehicle Class',
         'options':
           [{'value':'6','text':'Class 6'},
           {'value':'7','text':'Class 7'},
           {'value':'8','text':'Class 8'}]
         },
         {'id':'reefer',
+        'label':'Reefer Truck',
         'options':
           [{'value':1,'text':'Yes'},
           {'value':0,'text':'No'}]
         },
         {'id':'tow',
+        'label':'Tow Truck',
         'options':
           [{'value':1,'text':'Yes'},
           {'value':0,'text':'No'}]
         },
         {'id':'box',
+        'label':'Box Truck',
         'options':
           [{'value':1,'text':'Yes'},
           {'value':0,'text':'No'}]
@@ -50,13 +54,21 @@ teal = '#9dc8bc'
 red = '#df5a35'
 
 //create input boxes
-inputs = d3.select('div.inputs')
-            .selectAll('select')
+var fields = d3.select('div.inputs')
+            .selectAll('div')
             .data(opts)
             .enter()
-            .append('select')
-            .attr('id', function(d) {return d.id})
-            .attr('onchange', 'update()');
+            .append('div')
+            .attr('class','field');
+
+fields.append('label')
+      .text(d => d.label)
+      .attr('for', d => d.id);
+
+var inputs = fields.append('select')
+      .attr('id', function(d) {return d.id})
+      .attr('onchange', 'update()');
+
 
 //add input options
 inputs.selectAll('option')
@@ -284,29 +296,23 @@ eleGradient.append("stop")
     .attr("offset", "100%")
     .attr("stop-color", "#008000")
 
+gradStops = [{'offset':'0%','stopColor':'#000000'},
+            {'offset':'40%','stopColor':'#000000'},
+            {'offset':'60%','stopColor':'#009c05'},
+            {'offset':'85%','stopColor':'#cb9900'},
+            {'offset':'100%','stopColor':'#981818'}
+          ]
+
 var dieselGradient = svg.append("defs")
     .append("linearGradient")
     .attr("id", "diesel-gradient")
+    .selectAll("stop")
 
-dieselGradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#000000")
-
-dieselGradient.append("stop")
-    .attr("offset", "40%")
-    .attr("stop-color", "#000000")
-
-dieselGradient.append("stop")
-    .attr("offset", "60%")
-    .attr("stop-color", "#009c05")
-
-dieselGradient.append("stop")
-    .attr("offset", "85%")
-    .attr("stop-color", "#cb9900")
-
-dieselGradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#981818")
+dieselGradient = dieselGradient.data(gradStops)
+    .enter()
+    .append("stop")
+    .attr("offset", d => d.offset)
+    .attr("stop-color", d => d.stopColor)
 
 function drawChart() {
   bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
@@ -464,9 +470,17 @@ function updateChart() {
       .ease(d3.easePolyOut)
       .attr('width', d => xScale(d.cost));
 
+
+  //adjust gradient so green starts just before the end of electric
+  gradStops[2].offset = Math.round(95-(savings['total_sav_p']*100))+"%"
+
+  dieselGradient.data(gradStops).transition()
+      .delay(3000)
+      .duration(3000)
+      .attr("offset", d => d.offset)
+      .attr("stop-color", d => d.stopColor);
+
   axes.select('rect#chartbg')
-      .style("fill","url(#diesel-gradient)")
-      .attr("clip-path","url(#bar-clip)")
       .attr('height', bar_height)
       .attr('width', xScale(d3.max(bar_data.map(d => d.cost))));
 

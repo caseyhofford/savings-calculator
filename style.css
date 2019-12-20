@@ -27,10 +27,18 @@ div.inputs {
 
 div.inputs select {
 	padding: 10px 20px;
-	margin: 20px;
 	font-size: 18px;
 	font-weight: 600;
 	font-family: sofia-pro;
+}
+
+div.inputs div.field {
+	margin: 20px;
+}
+
+div.inputs div.field label {
+	display: block;
+  text-align: center;
 }
 
 div.charts {
