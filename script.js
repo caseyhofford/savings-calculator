@@ -264,6 +264,50 @@ drawChart()
 //Building the bars
 ////////////////////
 
+
+//Define Gradients
+eleColors = ['#df5a35']
+
+var eleGradient = svg.append("defs")
+    .append("linearGradient")
+    .attr("id", "electric-gradient")
+
+eleGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#000000")
+
+eleGradient.append("stop")
+    .attr("offset", "50%")
+    .attr("stop-color", "#000000")
+
+eleGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#008000")
+
+var dieselGradient = svg.append("defs")
+    .append("linearGradient")
+    .attr("id", "diesel-gradient")
+
+dieselGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#000000")
+
+dieselGradient.append("stop")
+    .attr("offset", "40%")
+    .attr("stop-color", "#000000")
+
+dieselGradient.append("stop")
+    .attr("offset", "60%")
+    .attr("stop-color", "#009c05")
+
+dieselGradient.append("stop")
+    .attr("offset", "85%")
+    .attr("stop-color", "#cb9900")
+
+dieselGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#981818")
+
 function drawChart() {
   bar_data = [{'type':'Electric','cost':savings.electric.lt_spend},{'type':'Diesel','cost':savings.diesel.lt_spend}]
   xScale = d3.scaleLinear()
@@ -284,6 +328,27 @@ function drawChart() {
   axes = svg.append('g')
       .attr('class', 'axes')
 
+  barClip = axes.append("clipPath")
+      .attr("id", "bar-clip")
+      .selectAll('.bar')
+      .data(bar_data)
+    .enter().append('rect')
+      .attr('class', d => 'bar '+d.type)
+      .attr('y', d => yScale(d.type))
+      .attr('height', yScale.bandwidth())
+      .transition()
+      .duration(3000)
+      .ease(d3.easePolyOut)
+      .attr('width', d => xScale(d.cost));
+
+  axes.append('rect')
+      .attr('class','background')
+      .attr('id','chartbg')
+      .style("fill","url(#diesel-gradient)")
+      .attr("clip-path","url(#bar-clip)")
+      .attr('height', bar_height)
+      .attr('width', xScale(d3.max(bar_data.map(d => d.cost))));
+
   axes.append('g')
       .append('text')
       .attr('class','xlabel')
@@ -297,16 +362,13 @@ function drawChart() {
     .attr('transform', 'translate(0, '+bar_height+')')
     .call(xAxis);
 
-  axes.selectAll('.bar')
-      .data(bar_data)
-    .enter().append('rect')
-      .attr('class', d => 'bar '+d.type)
-      .attr('y', d => yScale(d.type))
-      .attr('height', yScale.bandwidth())
-      .transition()
-      .duration(3000)
-      .ease(d3.easePolyOut)
-      .attr('width', d => xScale(d.cost));
+  //
+  //
+  // axes.selectAll('.bar.Electric')
+  //     .style("fill","url(#electric-gradient)")
+  //
+  // axes.selectAll('.bar.Diesel')
+  //     .style("fill","url(#diesel-gradient)")
 
   ticks = axes.append('g')
       .attr('class', 'y_axis')
@@ -347,9 +409,9 @@ function drawChart() {
       .html(d3.select('#battery')
         .html());
   axes.selectAll('.y_axis .tick .label')
-      .style('stroke', gray1)
-      .style('color', gray1)
-      .style('fill', gray1);
+      .style('stroke', gray0)
+      .style('color', gray0)
+      .style('fill', gray0);
 
   axes.selectAll('.y_axis .tick text.label')
       .style('stroke', 'none');
@@ -370,6 +432,8 @@ function drawChart() {
       .ease(d3.easePolyOut)
       .attr('x2', xScale(d3.min(bar_data.map(d => d.cost))));
 
+  axes.append('text')
+      .attr('class', 'savings')
 
   axes.attr('transform', 'translate(15,300)');//set bar chart placement
 }
@@ -383,13 +447,29 @@ function updateChart() {
       .ease(d3.easePolyOut)
       .call(xAxis)
 
-  axes.selectAll('rect')
+  // axes.selectAll('rect')
+  //     .data(bar_data)
+  //     .transition()
+  //     .duration(3000)
+  //     .delay(3000)
+  //     .ease(d3.easePolyOut)
+  //     .attr('width', d => xScale(d.cost))
+
+  barClip = axes.select("#bar-clip")
+      .selectAll('.bar')
       .data(bar_data)
       .transition()
       .duration(3000)
       .delay(3000)
       .ease(d3.easePolyOut)
-      .attr('width', d => xScale(d.cost))
+      .attr('width', d => xScale(d.cost));
+
+  axes.select('rect#chartbg')
+      .style("fill","url(#diesel-gradient)")
+      .attr("clip-path","url(#bar-clip)")
+      .attr('height', bar_height)
+      .attr('width', xScale(d3.max(bar_data.map(d => d.cost))));
+
   axes.selectAll('line.midline')
       .transition()
       .duration(3000)
@@ -429,8 +509,8 @@ var dials = [{label:'Lifetime\nSavings',percent:(savings.total_sav_p*100),dollar
 
 
 let arcbg = d3.arc()
-          .innerRadius(75)
-          .outerRadius(110)
+          .innerRadius(80)
+          .outerRadius(105)
           .startAngle(start)
           .endAngle(end);
 
